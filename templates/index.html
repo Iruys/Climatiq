@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Climatiq</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Climatiq</h1>
+      <p>Get real-time weather updates for any city worldwide. Just enter the city name and see the current weather conditions instantly!</p>
+      <div class="input-container">
+        <input type="text" id="city" placeholder="Enter city name..." />
+        <button onclick="fetchWeather()">Get Weather</button>
+      </div>
+      <div id="error" class="error"></div>
+      <div id="weather-card" class="card">
+        <div id="city-name" class="city-name"></div>
+        <div id="weather-description" class="weather-description"></div>
+        <div id="temperature-info" class="temperature"></div>
+      </div>
+    </div>
+
+    <script>
+      let isFetching = false; // Prevents spamming
+
+      async function fetchWeather() {
+        if (isFetching) return; // Stop if a request is already in progress
+        isFetching = true;
+
+        const city = document.getElementById('city').value.trim();
+        const errorDiv = document.getElementById('error');
+        const weatherCard = document.getElementById('weather-card');
+        const cityNameElem = document.getElementById('city-name');
+        const weatherDescElem = document.getElementById('weather-description');
+        const tempElem = document.getElementById('temperature-info');
+
+        errorDiv.textContent = '';
+        weatherCard.style.display = 'none';
+
+        if (!city) {
+          errorDiv.textContent = 'Please enter a city name.';
+          isFetching = false;
+          return;
+        }
+
+        try {
+          const response = await fetch('/weather', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ city }),
+          });
+
+          if (!response.ok) {
+            throw new Error('City not found');
+          }
+
+          const data = await response.json();
+          cityNameElem.textContent = data.city;
+          weatherDescElem.textContent = data.description;
+
+          // Assuming the API response includes the unit "°C"
+          tempElem.textContent = `${data.temperature}`; // Removed any hardcoded "°C"
+          weatherCard.style.display = 'block';
+        } catch (error) {
+          errorDiv.textContent =
+            'Could not fetch weather data. Please try again.';
+        }
+
+        isFetching = false; // Reset fetch status after the request completes
+      }
+    </script>
+  </body>
+</html>
